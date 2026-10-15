@@ -1,5 +1,5 @@
 // The wildlife tracker: follows one animal through its sightings, oldest
-// first. It reads the sightings from the page and drives the console; the
+// first. It reads the sightings the page wrote out and drives the console; the
 // tracker globe subscribes to the same state, so the console works without it.
 
 const listeners = [];
@@ -13,19 +13,8 @@ export function subscribe(fn) {
 const root = document.querySelector('[data-tracker]');
 
 if (root) {
-	const coords = JSON.parse(document.getElementById('globe-points')?.textContent || '[]');
-	const sightings = Array.from(document.querySelectorAll('#specimen-list > li'), function (li, i) {
-		const d = li.dataset;
-		return {
-			id: d.id,
-			animal: d.animal || '',
-			country: d.country || '',
-			place: d.place || '',
-			observer: d.observer || '',
-			time: Number(d.time) * 1000,
-			lat: coords[i] ? coords[i][0] : 0,
-			lng: coords[i] ? coords[i][1] : 0,
-		};
+	const sightings = JSON.parse(document.getElementById('tracker-data')?.textContent || '[]').map(function (s) {
+		return Object.assign({}, s, { time: s.time * 1000 });
 	});
 
 	const select = root.querySelector('select[name="animal"]');
@@ -67,7 +56,7 @@ if (root) {
 		out.when.textContent = date.format(s.time);
 		out.where.textContent = s.place || 'Location unknown';
 		out.who.textContent = 'Observer · ' + (s.observer || 'Unknown observer');
-		out.open.setAttribute('href', '#s-' + s.id);
+		out.open.setAttribute('href', '/specimens/' + encodeURIComponent(s.id));
 		if (out.lock) out.lock.textContent = '◎ Lock · ' + state.animal + ' · ' + (state.step + 1) + '/' + state.trail.length;
 		prev.disabled = state.step === 0;
 		next.disabled = state.step === state.trail.length - 1;
@@ -114,7 +103,10 @@ if (root) {
 		}, 1600);
 	}
 
-	select.addEventListener('change', () => track(select.value));
+	select.addEventListener('change', function () {
+		track(select.value);
+		history.replaceState(null, '', '?animal=' + encodeURIComponent(select.value));
+	});
 	range.addEventListener('input', function () {
 		stop();
 		go(Number(range.value));
@@ -128,15 +120,6 @@ if (root) {
 		go(state.step + 1);
 	});
 	play.addEventListener('click', () => (timer ? stop() : start()));
-
-	// Bars on the activity dashboard lock the tracker on to their animal.
-	document.querySelectorAll('[data-track]').forEach(function (button) {
-		button.addEventListener('click', function () {
-			select.value = button.dataset.track;
-			track(button.dataset.track);
-			document.getElementById('tracker').scrollIntoView({ block: 'start' });
-		});
-	});
 
 	if (select.value) track(select.value);
 }

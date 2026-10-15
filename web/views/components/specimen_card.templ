@@ -3,13 +3,10 @@ package components
 import "workshop/internal/domain/sighting"
 
 templ SpecimenCard(s sighting.Sighting) {
-	<article class="specimen" id={ SpecimenID(s) }>
+	<article class="specimen">
 		<div class="specimen__scan">
 			if m, ok := firstPhoto(s); ok {
 				<img src={ m.URL } alt={ photoAlt(s, m) } loading="lazy" decoding="async"/>
-				if m.Creator != "" {
-					<p class="specimen__photo-credit">Image · { m.Creator }</p>
-				}
 			} else {
 				<p class="specimen__no-image">No visual feed</p>
 			}
@@ -19,35 +16,13 @@ templ SpecimenCard(s sighting.Sighting) {
 			}
 		</div>
 		<div class="specimen__body">
-			<header>
-				<h3 class="specimen__name">{ displayName(s.Species) }</h3>
-				if s.Species.ScientificName != "" {
-					<p class="specimen__latin">{ s.Species.ScientificName }</p>
-				}
-				if t := taxonomy(s); t != "" {
-					<p class="specimen__taxonomy">{ t }</p>
-				}
-			</header>
-			<dl class="readout">
-				<div>
-					<dt>Location</dt>
-					<dd>{ place(s.Location) }</dd>
-				</div>
-				<div>
-					<dt>Coords</dt>
-					<dd class="mono">{ coords(s.Location.Coordinates) }</dd>
-				</div>
-				if s.IndividualCount != nil {
-					<div>
-						<dt>Count</dt>
-						<dd class="mono">{ individuals(*s.IndividualCount) }</dd>
-					</div>
-				}
-			</dl>
-			<aside class="field-note">
-				<p class="field-note__label">Field note</p>
-				<p>{ FunFact(s.Species) }</p>
-			</aside>
+			<h3 class="specimen__name">
+				<a href={ SpecimenURL(s) }>{ displayName(s.Species) }</a>
+			</h3>
+			if s.Species.ScientificName != "" {
+				<p class="specimen__latin">{ s.Species.ScientificName }</p>
+			}
+			<p class="specimen__place">{ place(s.Location) }</p>
 			<footer class="credit">
 				<p class="credit__who">
 					<span class="credit__label">Observer</span>
@@ -60,10 +35,8 @@ templ SpecimenCard(s sighting.Sighting) {
 				<p class="credit__when mono">
 					<time datetime={ s.HappenedAt.UTC().Format("2006-01-02T15:04:05Z") }>{ loggedAt(s.HappenedAt) }</time>
 				</p>
-				if s.ReferenceURL != "" {
-					<a class="credit__link" href={ templ.URL(s.ReferenceURL) } rel="noopener" target="_blank">Source record<span class="visually-hidden">{ " for " + displayName(s.Species) }</span></a>
-				}
 			</footer>
+			<p class="specimen__open mono" aria-hidden="true">Open file →</p>
 		</div>
 	</article>
 }

@@ -91,3 +91,64 @@ func Recent(sightings []sighting.Sighting, sum sighting.Summary) int {
 	}
 	return n
 }
+
+// Column is one bar of a column chart, and the tallest bar beside it.
+type Column struct {
+	Label      string
+	Count, Max int
+}
+
+// ByMonth counts sightings per calendar month, January first, to show the seasons.
+func ByMonth(sightings []sighting.Sighting) []Column {
+	cols := make([]Column, 12)
+	for i := range cols {
+		cols[i].Label = time.Month(i + 1).String()[:3]
+	}
+	for _, s := range sightings {
+		cols[s.HappenedAt.Month()-1].Count++
+	}
+	high := 0
+	for _, c := range cols {
+		high = max(high, c.Count)
+	}
+	for i := range cols {
+		cols[i].Max = high
+	}
+	return cols
+}
+
+// BasisOf names how a sighting was recorded, in words.
+func BasisOf(s sighting.Sighting) string { return Basis(s.BasisOfRecord) }
+
+// Credited counts sightings with a named observer.
+func Credited(sightings []sighting.Sighting) int {
+	n := 0
+	for _, s := range sightings {
+		if s.RecordedBy != "" {
+			n++
+		}
+	}
+	return n
+}
+
+// WithPhotos counts sightings that carry at least one photo.
+func WithPhotos(sightings []sighting.Sighting) int {
+	n := 0
+	for _, s := range sightings {
+		if _, ok := firstPhoto(s); ok {
+			n++
+		}
+	}
+	return n
+}
+
+// Percent is part as a whole-number share of total.
+func Percent(part, total int) string {
+	if total == 0 {
+		return "0%"
+	}
+	return strconv.Itoa(part*100/total) + "%"
+}
+
+// BarStyle sets --bar for a row drawn outside the charts, such as the leaderboard.
+func BarStyle(count, longest int) map[string]string { return bar(count, longest) }

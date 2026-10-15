@@ -24,6 +24,9 @@
 	--three-line: #1b6f7a;
 	--three-core: #06121c;
 
+	--weather-icon: var(--holo);
+	--weather-muted: var(--muted);
+
 	--chip-bg: transparent;
 	--chip-fg: var(--holo-dim);
 	--chip-active-bg: var(--holo);
@@ -943,39 +946,6 @@ main {
 	grid-column: 1 / -1;
 }
 
-/* Activity dashboard */
-.activity__grid {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: var(--gap);
-}
-
-.activity__wide {
-	grid-column: 1 / -1;
-	--sparkline-height: 7rem;
-	--chart-line: var(--holo);
-	--chart-fill: var(--holo);
-}
-
-.activity__figures {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem 2.5rem;
-	margin-bottom: 1.25rem;
-}
-
-.activity__figures p {
-	margin: 0;
-	color: var(--muted);
-}
-
-.activity__big {
-	margin-right: 0.4rem;
-	color: var(--holo);
-	font: 700 2rem/1 var(--font-display);
-	text-shadow: var(--glow);
-}
-
 .sparkline__line {
 	stroke-width: 2;
 	filter: drop-shadow(0 0 4px rgba(61, 245, 255, 0.6));
@@ -985,7 +955,7 @@ main {
 	opacity: 0.18;
 }
 
-.activity .bars {
+.chart .bars {
 	--chart-bar: rgba(61, 245, 255, 0.22);
 	--chart-track: rgba(61, 245, 255, 0.04);
 }
@@ -1033,6 +1003,867 @@ main {
 	opacity: 1;
 }
 
+
+/* ---------- Lab chrome: nav, clock, status strip ---------- */
+.site-nav a[aria-current="page"] {
+	border-color: var(--holo);
+	color: var(--holo);
+	box-shadow: var(--glow), inset 0 -2px 0 var(--holo);
+}
+
+.site-nav__code {
+	margin-right: 0.45rem;
+	color: var(--amber);
+	font: 500 0.7rem/1 var(--font-mono);
+	letter-spacing: 0.05em;
+}
+
+.lab-clock {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	color: var(--holo-dim);
+	letter-spacing: 0.12em;
+}
+
+.lab-clock__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #4dff9a;
+	box-shadow: 0 0 8px #4dff9a;
+	animation: blink 2s steps(2, jump-none) infinite;
+}
+
+@keyframes blink {
+	50% {
+		opacity: 0.25;
+	}
+}
+
+.status-strip {
+	overflow: hidden;
+	border-bottom: 1px solid var(--line-soft);
+	background: rgba(8, 26, 38, 0.6);
+	color: var(--muted);
+	font: 0.68rem/2.1 var(--font-mono);
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.status-strip__track {
+	display: inline-flex;
+	gap: 3rem;
+	padding-left: 3rem;
+	animation: ticker 40s linear infinite;
+}
+
+.status-strip__track span::before {
+	content: "▸ ";
+	color: var(--holo);
+}
+
+@keyframes ticker {
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+/* The header slides in once, as the lab powers on. */
+.js .site-header,
+.js .status-strip {
+	transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.js body:not(.is-booted) .site-header {
+	opacity: 0;
+	transform: translateY(-100%);
+}
+
+.js body:not(.is-booted) .status-strip {
+	opacity: 0;
+}
+
+/* ---------- Panels power on as they reveal ---------- */
+.panel::after {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto;
+	height: 2px;
+	background: linear-gradient(90deg, transparent, var(--holo), transparent);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.panel.reveal.is-visible::after,
+.reveal.is-visible .panel::after {
+	animation: panel-scan 1.1s ease-out var(--reveal-delay, 0ms) 1;
+}
+
+.panel.reveal.is-visible,
+.reveal.is-visible > .panel {
+	animation: power-on 0.7s steps(1, end) var(--reveal-delay, 0ms) 1;
+}
+
+@keyframes panel-scan {
+	0% {
+		top: 0;
+		opacity: 1;
+	}
+	100% {
+		top: 100%;
+		opacity: 0;
+	}
+}
+
+@keyframes power-on {
+	0% {
+		opacity: 0.2;
+	}
+	15% {
+		opacity: 0.9;
+	}
+	25% {
+		opacity: 0.4;
+	}
+	40% {
+		opacity: 1;
+	}
+}
+
+/* A scan line that sweeps down a globe's panel, again and again. */
+.globe__sweep {
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 1;
+	height: 30%;
+	background: linear-gradient(180deg, transparent, rgba(61, 245, 255, 0.07) 85%, rgba(61, 245, 255, 0.35));
+	border-bottom: 1px solid rgba(61, 245, 255, 0.4);
+	animation: sweep-down 6s linear infinite;
+	pointer-events: none;
+}
+
+@keyframes sweep-down {
+	from {
+		transform: translateY(-100%);
+	}
+	to {
+		transform: translateY(340%);
+	}
+}
+
+/* ---------- Page heads and buttons ---------- */
+.section--page {
+	border-top: 0;
+}
+
+.page-head {
+	margin-bottom: 2rem;
+}
+
+.page-head h1,
+.dossier__head h1 {
+	font-size: clamp(2.4rem, 5vw, 3.8rem);
+	text-shadow: 0 0 24px rgba(61, 245, 255, 0.25);
+}
+
+.page-head__lede {
+	max-width: 42rem;
+	margin: 0.75rem 0 0;
+	color: var(--muted);
+}
+
+.page-head__code {
+	padding: 0.2rem 0.4rem;
+	border: 1px solid var(--amber);
+	color: var(--amber);
+}
+
+.eyebrow:has(.page-head__code)::before {
+	display: none;
+}
+
+.lab-button {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
+	padding: 0.55rem 1.2rem;
+	border: 1px solid var(--holo);
+	border-radius: var(--radius);
+	background: var(--holo);
+	color: var(--space);
+	font: 600 1rem/1 var(--font-display);
+	letter-spacing: 0.14em;
+	text-decoration: none;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: box-shadow 0.15s, background 0.15s, color 0.15s;
+}
+
+.lab-button:hover {
+	color: var(--space);
+	box-shadow: 0 0 22px rgba(61, 245, 255, 0.55);
+}
+
+.lab-button--ghost {
+	background: transparent;
+	color: var(--holo);
+}
+
+.lab-button--ghost:hover {
+	background: rgba(61, 245, 255, 0.1);
+	color: var(--holo);
+}
+
+/* ---------- Scan deck ---------- */
+.hero {
+	min-height: 0;
+}
+
+.modules {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--gap);
+	padding-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.module {
+	display: grid;
+	gap: 0.4rem;
+	color: var(--text);
+	text-decoration: none;
+	transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.module:hover {
+	border-color: var(--holo);
+	background: rgba(12, 40, 56, 0.85);
+	box-shadow: inset 0 0 30px rgba(61, 245, 255, 0.12);
+	color: var(--text);
+}
+
+.module__code {
+	color: var(--amber);
+}
+
+.module__name {
+	font: 700 1.5rem/1.1 var(--font-display);
+	letter-spacing: 0.04em;
+}
+
+.module__desc {
+	color: var(--muted);
+	font-size: 0.95rem;
+}
+
+.module__go {
+	margin-top: 0.5rem;
+	color: var(--holo);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	transition: transform 0.2s;
+}
+
+.module:hover .module__go {
+	transform: translateX(6px);
+}
+
+/* Filters in a side panel that stays put while the cards scroll. */
+.archive__layout {
+	display: grid;
+	grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+	gap: var(--gap);
+	align-items: start;
+}
+
+.archive__layout .filter {
+	position: sticky;
+	top: 6.5rem;
+	max-height: calc(100vh - 8rem);
+	overflow-y: auto;
+	margin: 0;
+	scrollbar-width: thin;
+}
+
+.archive__layout .filter__group {
+	flex-wrap: wrap;
+	overflow: visible;
+}
+
+.archive__layout .filter__search input {
+	max-width: none;
+}
+
+.archive__layout .specimens {
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+}
+
+.load-more {
+	margin: 2rem 0 0;
+	text-align: center;
+}
+
+/* The whole card opens the specimen file. */
+.specimen__name a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.specimen__name a::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+}
+
+.specimen__name a:focus-visible {
+	outline: none;
+}
+
+.specimen:has(.specimen__name a:focus-visible) {
+	outline: 2px solid var(--amber);
+	outline-offset: 2px;
+}
+
+.specimen__body {
+	gap: 0.6rem;
+}
+
+.specimen__name {
+	font-size: 1.35rem;
+}
+
+.specimen__place {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+.specimen__open {
+	margin: 0;
+	color: var(--holo);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	opacity: 0.6;
+	transition: opacity 0.2s, transform 0.2s;
+}
+
+.specimen:hover .specimen__open {
+	opacity: 1;
+	transform: translateX(6px);
+}
+
+/* ---------- Analysis lab ---------- */
+.readings {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+	gap: var(--gap);
+	margin: 0 0 var(--gap);
+}
+
+.reading dt {
+	color: var(--muted);
+	font: 0.7rem/1 var(--font-mono);
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+}
+
+.reading dd {
+	margin: 0.6rem 0 0;
+	color: var(--holo);
+	font: 700 2.2rem/1 var(--font-display);
+	text-shadow: var(--glow);
+}
+
+.reading dd small {
+	display: block;
+	margin-top: 0.4rem;
+	color: var(--muted);
+	font: 400 0.85rem/1.3 var(--font-body);
+	text-shadow: none;
+}
+
+.reading--wide dd {
+	font-size: 1.6rem;
+}
+
+.analysis__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--gap);
+}
+
+.chart--wide {
+	grid-column: span 3;
+	--sparkline-height: 8rem;
+	--chart-line: var(--holo);
+	--chart-fill: var(--holo);
+}
+
+.analysis__grid .chart--wide + .chart--wide {
+	grid-column: span 3;
+}
+
+.chart__sub {
+	margin-top: 1.5rem !important;
+}
+
+/* Charts draw themselves in when they reveal. */
+@property --bar {
+	syntax: "<percentage>";
+	inherits: true;
+	initial-value: 0%;
+}
+
+.js .reveal.is-visible .bars__row,
+.js .reveal.is-visible .columns__col,
+.js .reveal.is-visible .leaderboard li {
+	animation: grow 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes grow {
+	from {
+		--bar: 0%;
+	}
+}
+
+.js .reveal .sparkline {
+	clip-path: inset(0 100% 0 0);
+}
+
+.js .reveal.is-visible .sparkline {
+	animation: draw 1.6s ease-out forwards;
+}
+
+@keyframes draw {
+	to {
+		clip-path: inset(0 0 0 0);
+	}
+}
+
+.columns {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	gap: 0.4rem;
+	align-items: end;
+	height: 12rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.columns__col {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	align-items: end;
+	height: 100%;
+	text-align: center;
+}
+
+.columns__bar {
+	display: block;
+	height: var(--bar);
+	min-height: 2px;
+	border-top: 2px solid var(--holo);
+	background: linear-gradient(180deg, rgba(61, 245, 255, 0.45), rgba(61, 245, 255, 0.05));
+	box-shadow: 0 -4px 14px rgba(61, 245, 255, 0.25);
+}
+
+.columns__count {
+	color: var(--holo);
+	font: 0.72rem/1.6 var(--font-mono);
+}
+
+.columns__label {
+	padding-top: 0.4rem;
+	color: var(--muted);
+	font: 0.68rem/1 var(--font-mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+/* ---------- Observers ---------- */
+.leaderboard li {
+	padding-inline: 0.5rem;
+	background: linear-gradient(90deg, rgba(61, 245, 255, 0.14) var(--bar, 0%), transparent var(--bar, 0%));
+}
+
+/* ---------- Specimen file ---------- */
+.crumbs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0 0 1.5rem;
+	color: var(--muted);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.crumbs [aria-current] {
+	color: var(--amber);
+}
+
+.dossier__head {
+	margin-bottom: 2rem;
+}
+
+.dossier__head h1 {
+	text-transform: capitalize;
+}
+
+.dossier__latin {
+	margin: 0.3rem 0 0;
+	color: var(--holo);
+	font-size: 1.2rem;
+	font-style: italic;
+}
+
+.dossier__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin: 1.25rem 0 0;
+}
+
+.dossier__grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--gap);
+}
+
+.dossier__visual {
+	grid-column: span 2;
+	padding: 0.75rem;
+}
+
+.dossier__side {
+	display: grid;
+	gap: var(--gap);
+	align-content: start;
+}
+
+.dossier__photo {
+	position: relative;
+	aspect-ratio: 4 / 3;
+	margin: 0;
+	overflow: hidden;
+	background: linear-gradient(135deg, #0a2433, #050b14);
+}
+
+.dossier__photo img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.dossier__photo::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(0deg, rgba(5, 11, 20, 0.22) 0 1px, transparent 1px 3px);
+	pointer-events: none;
+}
+
+.dossier__scanline {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	z-index: 1;
+	height: 2px;
+	background: var(--holo);
+	box-shadow: 0 0 14px 3px var(--holo);
+	animation: dossier-scan 4.5s ease-in-out infinite;
+}
+
+@keyframes dossier-scan {
+	0%,
+	100% {
+		top: 0;
+	}
+	50% {
+		top: calc(100% - 2px);
+	}
+}
+
+.dossier__reticle {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 1;
+	width: 26%;
+	aspect-ratio: 1;
+	border: 1px dashed rgba(255, 179, 71, 0.75);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	animation: spin 18s linear infinite;
+}
+
+.dossier__reticle::before,
+.dossier__reticle::after {
+	content: "";
+	position: absolute;
+	background: rgba(255, 179, 71, 0.75);
+}
+
+.dossier__reticle::before {
+	top: 50%;
+	left: -20%;
+	right: -20%;
+	height: 1px;
+}
+
+.dossier__reticle::after {
+	left: 50%;
+	top: -20%;
+	bottom: -20%;
+	width: 1px;
+}
+
+@keyframes spin {
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
+}
+
+.dossier__photo figcaption {
+	position: absolute;
+	right: 0.75rem;
+	bottom: 0.6rem;
+	left: 0.75rem;
+	z-index: 2;
+	color: var(--text);
+	text-shadow: 0 1px 2px #000;
+}
+
+.dossier__licence {
+	margin-left: 0.75rem;
+	color: var(--muted);
+}
+
+.dossier__photo--none {
+	display: grid;
+	place-items: center;
+}
+
+.dossier__thumbs {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 0.5rem;
+	margin: 0.75rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.dossier__thumbs img {
+	width: 100%;
+	aspect-ratio: 1;
+	object-fit: cover;
+	border: 1px solid var(--line);
+	transition: border-color 0.15s;
+}
+
+.dossier__thumbs a:hover img {
+	border-color: var(--holo);
+}
+
+.locator {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.locator__bg {
+	fill: rgba(5, 11, 20, 0.7);
+	stroke: var(--line);
+}
+
+.locator__grid {
+	stroke: var(--line);
+	stroke-width: 0.6;
+	opacity: 0.6;
+}
+
+.locator__equator {
+	stroke: var(--holo);
+	stroke-width: 0.6;
+	stroke-dasharray: 3 3;
+	opacity: 0.5;
+}
+
+.locator__cross {
+	stroke: var(--amber);
+	stroke-width: 0.7;
+	opacity: 0.7;
+}
+
+.locator__dot {
+	fill: var(--amber);
+}
+
+.locator__ring {
+	fill: none;
+	stroke: var(--amber);
+	stroke-width: 1.2;
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: ping 2s ease-out infinite;
+}
+
+@keyframes ping {
+	from {
+		transform: scale(0.4);
+		opacity: 1;
+	}
+	to {
+		transform: scale(2.2);
+		opacity: 0;
+	}
+}
+
+.dossier__coords {
+	margin: 0.75rem 0 0;
+	color: var(--holo);
+	font-size: 0.95rem;
+}
+
+.dossier__place {
+	margin: 0.2rem 0 0;
+	color: var(--muted);
+}
+
+.field-note--big {
+	grid-column: 1 / -1;
+	font-size: 1.15rem;
+}
+
+.readout--full {
+	border: 0;
+	padding: 0;
+}
+
+.lineage {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.lineage li {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 0.75rem;
+	align-items: baseline;
+	padding: 0.35rem 0 0.35rem 1.1rem;
+	border-left: 1px solid var(--line);
+}
+
+.lineage li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 0.7rem;
+	border-top: 1px solid var(--line);
+}
+
+.lineage li:last-child .lineage__name {
+	color: var(--amber);
+	font-style: italic;
+}
+
+.lineage__level {
+	min-width: 4.5rem;
+	color: var(--muted);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.lineage__name {
+	color: var(--holo);
+	font-weight: 600;
+}
+
+/* Each rank of the tree lights up in turn. */
+.js .reveal.is-visible .lineage li {
+	animation: rank-in 0.5s ease-out both;
+}
+
+.lineage li:nth-child(2) { animation-delay: 0.1s !important; }
+.lineage li:nth-child(3) { animation-delay: 0.2s !important; }
+.lineage li:nth-child(4) { animation-delay: 0.3s !important; }
+.lineage li:nth-child(5) { animation-delay: 0.4s !important; }
+.lineage li:nth-child(6) { animation-delay: 0.5s !important; }
+.lineage li:nth-child(7) { animation-delay: 0.6s !important; }
+
+@keyframes rank-in {
+	from {
+		opacity: 0;
+		transform: translateX(-0.75rem);
+	}
+}
+
+.credit-panel__name {
+	margin: 0;
+	font: 700 1.6rem/1.15 var(--font-display);
+}
+
+.credit-panel__remarks {
+	margin: 1rem 0 0;
+	padding-left: 0.9rem;
+	border-left: 2px solid var(--line);
+	color: var(--muted);
+	font-size: 0.92rem;
+}
+
+.weather {
+	color: var(--text);
+}
+
+.related {
+	margin-top: clamp(2rem, 5vw, 3.5rem);
+}
+
+.related__title {
+	margin-bottom: 1rem;
+	font-size: 1.6rem;
+}
+
+.related__list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.related__item {
+	--cut: 10px;
+	display: grid;
+	gap: 0.25rem;
+	padding: 0.9rem 1rem;
+	color: var(--text);
+	text-decoration: none;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.related__item:hover {
+	border-color: var(--holo);
+	box-shadow: inset 0 0 20px rgba(61, 245, 255, 0.12);
+	color: var(--text);
+}
+
+.related__code {
+	color: var(--amber);
+}
+
+.related__when {
+	color: var(--holo-dim);
+}
+
 /* Tablets and phones */
 @media (max-width: 900px) {
 	.hero {
@@ -1046,8 +1877,26 @@ main {
 	}
 
 	.tracker__grid,
-	.activity__grid {
+	.analysis__grid,
+	.modules,
+	.archive__layout,
+	.dossier__grid {
 		grid-template-columns: 1fr;
+	}
+
+	.chart--wide,
+	.analysis__grid .chart--wide + .chart--wide,
+	.dossier__visual {
+		grid-column: auto;
+	}
+
+	.archive__layout .filter {
+		position: static;
+		max-height: none;
+	}
+
+	.lab-clock {
+		display: none;
 	}
 
 	.globe--tracker {
@@ -1081,6 +1930,15 @@ main {
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;
+	}
+
+	.js .reveal .sparkline {
+		clip-path: none;
+	}
+
+	.globe__sweep,
+	.dossier__scanline {
+		display: none;
 	}
 
 	*,

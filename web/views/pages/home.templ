@@ -8,81 +8,86 @@ import (
 
 templ Home(sightings []sighting.Sighting) {
 	{{ sum := sighting.Summarise(sightings) }}
-	{{ byYear := sighting.CountByYear(sightings) }}
 	@layout.Base(layout.BaseProps{
-		Title:       "Terra Scan · Field specimen atlas",
+		Title:       "Terra Scan · Scan deck",
 		Description: "A holographic atlas of wildlife sightings from around the world, with field notes and observer credits.",
+		Page:        "scan",
 	}) {
 		if len(sightings) == 0 {
-			<section class="empty panel">
-				<h1>No signals detected</h1>
-				<p>No sightings have been ingested yet.</p>
-			</section>
+			@noSignals()
 		} else {
 			@hero(sightings, sum)
-			@tracker(sightings)
-			@activity(sightings, sum, byYear)
-			<section id="specimens" class="section">
-				<div class="section__head">
-					<p class="eyebrow">Module 04</p>
-					<h2>Specimen archive</h2>
+			@modules(sightings, sum)
+			<section id="specimens" class="section archive">
+				<div class="section__head reveal">
+					<p class="eyebrow">Specimen archive</p>
+					<h2 data-decode>Browse every signal</h2>
+					<p class="section__lede">Narrow the archive by class, animal or region. Open any specimen for its full file.</p>
 				</div>
-				@components.Filter(components.FilterProps{
-					Target: "specimen-list",
-					Search: true,
-					Groups: []components.FilterGroup{
-						{Key: "group", Label: "Class", Options: components.FilterOptions(sightings, 0, components.Group)},
-						{Key: "animal", Label: "Animal", Options: components.FilterOptions(sightings, 14, components.Animal)},
-						{Key: "country", Label: "Region", Options: components.FilterOptions(sightings, 12, components.Country)},
-					},
-				})
-				<ul id="specimen-list" class="specimens">
-					for _, s := range sightings {
-						<li { components.FilterAttrs(s)... }>
-							@components.SpecimenCard(s)
-						</li>
-					}
-				</ul>
-				<p class="no-match" hidden>No specimens match these filters.</p>
+				<div class="archive__layout">
+					@components.Filter(components.FilterProps{
+						Target: "specimen-list",
+						Search: true,
+						Groups: []components.FilterGroup{
+							{Key: "group", Label: "Class", Options: components.FilterOptions(sightings, 0, components.Group)},
+							{Key: "animal", Label: "Animal", Options: components.FilterOptions(sightings, 14, components.Animal)},
+							{Key: "country", Label: "Region", Options: components.FilterOptions(sightings, 12, components.Country)},
+						},
+					})
+					<div class="archive__results">
+						<ul id="specimen-list" class="specimens" data-page-size="24">
+							for _, s := range sightings {
+								<li { components.FilterAttrs(s)... }>
+									@components.SpecimenCard(s)
+								</li>
+							}
+						</ul>
+						<p class="no-match" hidden>No specimens match these filters.</p>
+						<p class="load-more" hidden>
+							<button type="button" class="lab-button">Load more specimens</button>
+						</p>
+					</div>
+				</div>
 			</section>
-			@observers(sightings)
+			<script src="/assets/js/filter.js" defer></script>
 		}
 	}
 }
 
 templ hero(sightings []sighting.Sighting, sum sighting.Summary) {
 	<section id="globe" class="hero">
-		<div class="hero__intro">
+		<div class="hero__intro reveal">
 			<p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Live biosphere scan</p>
-			<h1>Every signal is an animal someone saw.</h1>
-			<p class="hero__lede">Spin the globe to scan the planet. Each point of light is a sighting; select one to pull up its specimen file, field note and the observer who logged it.</p>
+			<h1 data-decode>Every signal is an animal someone saw.</h1>
+			<p class="hero__lede">Spin the globe to scan the planet. Each point of light is a sighting; select one to open its specimen file.</p>
 			<dl class="stats">
 				<div class="panel stat">
 					<dt>Signals</dt>
-					<dd>{ sum.Sightings }</dd>
+					<dd data-count>{ sum.Sightings }</dd>
 				</div>
 				<div class="panel stat">
 					<dt>Species</dt>
-					<dd>{ sum.Species }</dd>
+					<dd data-count>{ sum.Species }</dd>
 				</div>
 				<div class="panel stat">
 					<dt>Regions</dt>
-					<dd>{ sum.Countries }</dd>
+					<dd data-count>{ sum.Countries }</dd>
 				</div>
 				<div class="panel stat">
 					<dt>Observers</dt>
-					<dd>{ sum.Recorders }</dd>
+					<dd data-count>{ sum.Recorders }</dd>
 				</div>
 			</dl>
 			<p class="hero__range mono">Archive span { sum.Earliest.Format("2006") } → { sum.Latest.Format("2006") }</p>
 		</div>
-		<div class="globe panel">
+		<div class="globe panel reveal" style="--reveal-delay: 150ms">
 			<span class="globe__corner globe__corner--tl" aria-hidden="true"></span>
 			<span class="globe__corner globe__corner--br" aria-hidden="true"></span>
+			<span class="globe__sweep" aria-hidden="true"></span>
 			@templ.JSONScript("globe-points", components.GlobePoints(sightings))
 			@components.ThreeScene(components.ThreeSceneProps{
 				Scene: "globe",
-				Label: "A rotating globe with a glowing point for each sighting. The same sightings are listed below.",
+				Label: "A rotating globe with a glowing point for each sighting. The same sightings are listed in the archive below.",
 			})
 			<p class="globe__readout mono" aria-live="polite"></p>
 			<p class="globe__hint">Drag to rotate · select a signal</p>
@@ -90,148 +95,25 @@ templ hero(sightings []sighting.Sighting, sum sighting.Summary) {
 	</section>
 }
 
-templ observers(sightings []sighting.Sighting) {
-	<section id="observers" class="section observers">
-		<div class="section__head">
-			<p class="eyebrow">Module 05</p>
-			<h2>Observer credits</h2>
-			<p class="section__lede">The people in the field behind every record.</p>
-		</div>
-		<div class="observers__grid">
-			<div class="panel">
-				<p class="panel__title">Top observers</p>
-				<ol class="leaderboard">
-					for _, t := range components.FilterOptions(sightings, 10, components.Observer) {
-						<li>
-							<span class="leaderboard__name">{ t.Name }</span>
-							<span class="leaderboard__count mono">{ t.Count } logged</span>
-						</li>
-					}
-				</ol>
-			</div>
-			<div class="panel">
-				<p class="panel__title">Latest transmissions</p>
-				<ol class="log">
-					for _, s := range components.Latest(sightings, 8) {
-						<li>
-							<a href={ templ.URL("#" + components.SpecimenID(s)) }>{ components.Animal(s) }</a>
-							<span class="log__who">
-								if s.RecordedBy != "" {
-									{ s.RecordedBy }
-								} else {
-									Unknown observer
-								}
-							</span>
-							<time class="mono" datetime={ s.HappenedAt.UTC().Format("2006-01-02") }>{ s.HappenedAt.Format("2 Jan 2006") }</time>
-						</li>
-					}
-				</ol>
-			</div>
-		</div>
-	</section>
-}
-
-templ tracker(sightings []sighting.Sighting) {
-	<section id="tracker" class="section tracker">
-		<div class="section__head">
-			<p class="eyebrow">Module 02</p>
-			<h2>Wildlife tracker</h2>
-			<p class="section__lede">Lock on to one animal and replay every signal logged for it, oldest first.</p>
-		</div>
-		<div class="tracker__grid">
-			<div class="globe globe--tracker panel">
-				<span class="globe__corner globe__corner--tl" aria-hidden="true"></span>
-				<span class="globe__corner globe__corner--br" aria-hidden="true"></span>
-				@components.ThreeScene(components.ThreeSceneProps{
-					Scene: "tracker",
-					Label: "A globe tracing the tracked animal's sightings in date order. The current sighting is described beside it.",
-				})
-				<p class="globe__readout mono tracker__lock" aria-hidden="true"></p>
-				<p class="globe__hint">Drag to look around</p>
-			</div>
-			<div class="tracker__console panel" data-tracker>
-				<p class="panel__title">Target lock</p>
-				<label class="tracker__pick">
-					<span>Animal</span>
-					<select name="animal">
-						for _, t := range components.FilterOptions(sightings, 0, components.Animal) {
-							<option value={ t.Name }>{ t.Name } · { t.Count }</option>
-						}
-					</select>
-				</label>
-				<div class="tracker__controls">
-					<button type="button" class="tracker__btn" data-action="prev" aria-label="Previous signal">◀</button>
-					<button type="button" class="tracker__btn tracker__btn--play" data-action="play" aria-pressed="false">Play trail</button>
-					<button type="button" class="tracker__btn" data-action="next" aria-label="Next signal">▶</button>
-				</div>
-				<label class="tracker__scrub">
-					<span class="visually-hidden">Signal</span>
-					<input type="range" name="step" min="0" max="0" value="0"/>
-				</label>
-				<div class="tracker__now" aria-live="polite">
-					<p class="tracker__step mono"></p>
-					<p class="tracker__when mono"></p>
-					<p class="tracker__where"></p>
-					<p class="tracker__who"></p>
-					<a class="tracker__open" href="#specimens">Open specimen file</a>
-				</div>
-				<dl class="tracker__stats">
-					<div>
-						<dt>Signals</dt>
-						<dd data-stat="signals">–</dd>
-					</div>
-					<div>
-						<dt>Regions</dt>
-						<dd data-stat="regions">–</dd>
-					</div>
-					<div>
-						<dt>First seen</dt>
-						<dd data-stat="first">–</dd>
-					</div>
-					<div>
-						<dt>Last seen</dt>
-						<dd data-stat="last">–</dd>
-					</div>
-					<div class="tracker__stats-wide">
-						<dt>Trail length</dt>
-						<dd data-stat="distance">–</dd>
-					</div>
-				</dl>
-			</div>
-		</div>
-		<script type="module" src="/assets/js/tracker.js"></script>
-	</section>
-}
-
-templ activity(sightings []sighting.Sighting, sum sighting.Summary, byYear map[int]int) {
-	{{ peakYear, peakCount := components.PeakYear(byYear) }}
-	<section id="activity" class="section activity">
-		<div class="section__head">
-			<p class="eyebrow">Module 03</p>
-			<h2>Activity dashboard</h2>
-			<p class="section__lede">How busy the field has been. Select an animal's bar to track it.</p>
-		</div>
-		<div class="activity__grid">
-			<div class="panel activity__wide">
-				<p class="panel__title">Signals per year · { components.SparkFirst(sum) }–{ sum.Latest.Year() }</p>
-				<div class="activity__figures">
-					<p><span class="activity__big">{ peakCount }</span> signals in { peakYear }, the busiest year</p>
-					<p><span class="activity__big">{ components.Recent(sightings, sum) }</span> in the 12 months to { sum.Latest.Format("Jan 2006") }</p>
-				</div>
-				@components.Sparkline(byYear, sum)
-			</div>
-			<div class="panel">
-				<p class="panel__title">Most-tracked animals</p>
-				@components.TrackBars(components.FilterOptions(sightings, 8, components.Animal))
-			</div>
-			<div class="panel">
-				<p class="panel__title">Busiest regions</p>
-				@components.Bars(components.FilterOptions(sightings, 8, components.Country))
-			</div>
-			<div class="panel">
-				<p class="panel__title">By class</p>
-				@components.Bars(components.FilterOptions(sightings, 0, components.Group))
-			</div>
-		</div>
-	</section>
+templ modules(sightings []sighting.Sighting, sum sighting.Summary) {
+	<nav class="modules" aria-label="Lab modules">
+		<a class="module panel reveal" href="/tracker">
+			<span class="module__code mono">02</span>
+			<span class="module__name">Wildlife tracker</span>
+			<span class="module__desc">Lock on to one animal and replay its trail across the globe.</span>
+			<span class="module__go mono" aria-hidden="true">Engage →</span>
+		</a>
+		<a class="module panel reveal" href="/analysis" style="--reveal-delay: 120ms">
+			<span class="module__code mono">03</span>
+			<span class="module__name">Analysis lab</span>
+			<span class="module__desc">Activity by year and season, top animals and regions, across { sum.Species } species.</span>
+			<span class="module__go mono" aria-hidden="true">Analyse →</span>
+		</a>
+		<a class="module panel reveal" href="/observers" style="--reveal-delay: 240ms">
+			<span class="module__code mono">04</span>
+			<span class="module__name">Observers</span>
+			<span class="module__desc">Credits for the { sum.Recorders } people in the field behind every record.</span>
+			<span class="module__go mono" aria-hidden="true">View credits →</span>
+		</a>
+	</nav>
 }

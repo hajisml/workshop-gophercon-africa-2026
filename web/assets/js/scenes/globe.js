@@ -1,6 +1,6 @@
 // The holographic globe: a wireframe earth with a point of light per sighting.
 // Points come from the page as [lat, lng] pairs, in the same order as the
-// specimen cards, so point i is card i. Selecting one scrolls to its card.
+// specimen cards, so point i is card i. Selecting one opens its specimen file.
 
 import { mount } from '/assets/js/threejs.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -132,11 +132,7 @@ mount('globe', function ({ THREE, scene, camera, canvas, colour, still }) {
 		if (readout) readout.textContent = describe(i);
 
 		const card = cards[i];
-		if (!card) return;
-		document.querySelectorAll('.specimen.is-targeted').forEach((el) => el.classList.remove('is-targeted'));
-		const article = card.querySelector('.specimen');
-		article.classList.add('is-targeted');
-		article.scrollIntoView({ behavior: still ? 'auto' : 'smooth', block: 'center' });
+		if (card && card.dataset.id) window.location.href = '/specimens/' + encodeURIComponent(card.dataset.id);
 	});
 
 	return function (time) {

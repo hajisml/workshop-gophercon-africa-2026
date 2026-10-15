@@ -1,0 +1,68 @@
+package pages
+
+import (
+	"workshop/internal/domain/sighting"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
+
+templ Analysis(sightings []sighting.Sighting) {
+	{{ sum := sighting.Summarise(sightings) }}
+	{{ byYear := sighting.CountByYear(sightings) }}
+	{{ peakYear, peakCount := components.PeakYear(byYear) }}
+	@layout.Base(layout.BaseProps{
+		Title:       "Terra Scan · Analysis lab",
+		Description: "Activity across the archive: sightings by year and season, top animals, regions and classes.",
+		Page:        "analysis",
+	}) {
+		if len(sightings) == 0 {
+			@noSignals()
+		} else {
+			<section class="section section--page analysis">
+				@pageHead("03", "Analysis lab", "Field activity", "How busy the field has been, and where. Select an animal to track it.")
+				<dl class="readings reveal">
+					<div class="panel reading">
+						<dt>Busiest year</dt>
+						<dd><span data-count>{ peakCount }</span> <small>signals in { peakYear }</small></dd>
+					</div>
+					<div class="panel reading">
+						<dt>Last 12 months</dt>
+						<dd><span data-count>{ components.Recent(sightings, sum) }</span> <small>to { sum.Latest.Format("Jan 2006") }</small></dd>
+					</div>
+					<div class="panel reading">
+						<dt>With photos</dt>
+						<dd><span data-count>{ components.WithPhotos(sightings) }</span> <small>{ components.Percent(components.WithPhotos(sightings), sum.Sightings) } of signals</small></dd>
+					</div>
+					<div class="panel reading">
+						<dt>Animals counted</dt>
+						<dd><span data-count>{ sum.Individuals }</span> <small>individuals</small></dd>
+					</div>
+				</dl>
+				<div class="analysis__grid">
+					<div class="panel chart chart--wide reveal">
+						<p class="panel__title">Signals per year · { components.SparkFirst(sum) }–{ sum.Latest.Year() }</p>
+						@components.Sparkline(byYear, sum)
+					</div>
+					<div class="panel chart chart--wide reveal">
+						<p class="panel__title">Seasonality · signals by month</p>
+						@components.Columns(components.ByMonth(sightings))
+					</div>
+					<div class="panel chart reveal">
+						<p class="panel__title">Most-tracked animals</p>
+						@components.TrackBars(components.FilterOptions(sightings, 8, components.Animal))
+					</div>
+					<div class="panel chart reveal" style="--reveal-delay: 120ms">
+						<p class="panel__title">Busiest regions</p>
+						@components.Bars(components.FilterOptions(sightings, 8, components.Country))
+					</div>
+					<div class="panel chart reveal" style="--reveal-delay: 240ms">
+						<p class="panel__title">By class</p>
+						@components.Bars(components.FilterOptions(sightings, 0, components.Group))
+						<p class="panel__title chart__sub">How it was recorded</p>
+						@components.Bars(components.FilterOptions(sightings, 0, components.BasisOf))
+					</div>
+				</div>
+			</section>
+		}
+	}
+}

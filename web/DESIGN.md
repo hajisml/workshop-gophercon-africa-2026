@@ -30,24 +30,36 @@ background, glowing cyan lines, amber for highlights and field notes.
 - Radii are small (`--radius: 4px`). Spacing scales with `--gap`.
 - A faint blueprint grid sits behind the page.
 
+## Pages
+
+| Page | URL | What's on it |
+|------|-----|--------------|
+| 01 Scan deck | `/` | globe + four counters, three module tiles, specimen archive (filters in a sticky side panel, 24 cards at a time with "Load more") |
+| 02 Tracker | `/tracker?animal=…` | tracker globe + Target lock console |
+| 03 Analysis lab | `/analysis` | four readings, signals per year, seasonality by month, top animals (link to tracker), regions, classes, recording method |
+| 04 Observers | `/observers` | readings, top-20 leaderboard with bars, latest 14 transmissions |
+| Specimen file | `/specimens/{id}` | photo with scan line and reticle + thumbnails, locator map, weather, field note, readout, lineage tree, observer credit, other signals of the animal |
+
+Every page opens with `pageHead` (amber code, eyebrow, decoding h1, lede). Nav items carry their
+module code and `aria-current` on the current page.
+
 ## Components
 
-- **Header**: sticky, translucent; logo (reticle around a globe, amber dot) + "TERRA SCAN" wordmark.
-- **Hero**: intro with four stat panels on the left, the 3D globe (three.js, `scenes/globe.js`) on
-  the right. One glowing point per sighting; select one to scroll to its card. Filters dim points.
-- **Wildlife tracker** (`#tracker`): a second globe (`scenes/tracker.js`) beside a "Target
-  lock" console (`assets/js/tracker.js`). Pick an animal; its sightings are joined oldest-first by
-  an amber arcing trail that draws itself as you play or scrub. The console shows the current
-  signal (date, place, observer, link to its card) and stats: signals, regions, first/last seen,
-  distance between signals. Both globes share `scenes/hologlobe.js`.
-- **Activity dashboard** (`#activity`): signals-per-year line since 2010 with the busiest year and
-  last-12-months figures, and cyan bars for top animals, regions and classes (charts block).
-  Animal bars are buttons that lock the tracker on to that animal.
-- **Filter**: chips for class, animal and region, plus search (filter block).
-- **Specimen card**: 4:3 photo with scan lines and a hover sweep, catalogue tag, class badge;
-  name, Latin name, taxonomy; a dashed readout (location, coords, count); an amber field note
-  (fun fact from `components/facts.go`); observer credit with the time logged.
-- **Observer credits**: top-10 observers leaderboard and the latest transmissions.
+- **Header**: sticky; logo + "TERRA SCAN"; numbered nav; live UTC clock with a blinking green dot.
+  Below it a status strip of lab telemetry scrolls slowly.
+- **Globes** (three.js, sharing `scenes/hologlobe.js`): a scan band sweeps down each globe's panel.
+  Home dots open specimen files; filters dim them.
+- **Specimen card**: 4:3 photo with scan lines, tag, class badge; name, Latin name, place, observer
+  and time. The whole card links to the specimen file.
+- **Tracker**: amber arcing trail drawn oldest-first, play/scrub/step, current signal and stats.
+- **Charts**: cyan bars and columns that grow in, a year line that draws left to right.
+
+## Motion (`assets/js/lab.js`, `reveal.js`, `transitions.css`)
+
+- Header slides in on load; sections and panels reveal with a flicker "power-on" and a scan line.
+- `data-decode` headings resolve from random glyphs; `data-count` numbers count up.
+- Pages cross-fade, the header staying put.
+- Under reduced motion all of it is off and everything simply shows.
 
 ## Avoid
 

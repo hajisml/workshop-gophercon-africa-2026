@@ -29,11 +29,25 @@ templ TrackBars(rows []sighting.Tally) {
 		<ol class="bars bars--track">
 			for _, row := range rows {
 				<li class="bars__row" style={ bar(row.Count, rows[0].Count) }>
-					<button type="button" class="bars__track" data-track={ row.Name }>
+					<a class="bars__track" href={ TrackerURL(row.Name) }>
 						<span class="bars__name">{ row.Name }</span>
 						<span class="visually-hidden">, track this animal</span>
-					</button>
+					</a>
 					<span class="bars__count">{ row.Count }</span>
+				</li>
+			}
+		</ol>
+	}
+}
+
+templ Columns(cols []Column) {
+	if len(cols) > 0 {
+		<ol class="columns">
+			for _, c := range cols {
+				<li class="columns__col" style={ bar(c.Count, c.Max) }>
+					<span class="columns__count">{ c.Count }</span>
+					<span class="columns__bar" aria-hidden="true"></span>
+					<span class="columns__label">{ c.Label }</span>
 				</li>
 			}
 		</ol>

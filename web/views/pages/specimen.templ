@@ -1,0 +1,178 @@
+package pages
+
+import (
+	"workshop/internal/domain/sighting"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
+
+templ Specimen(s sighting.Sighting, all []sighting.Sighting) {
+	{{ name := components.Animal(s) }}
+	{{ photos := components.Photos(s) }}
+	@layout.Base(layout.BaseProps{
+		Title:       "Terra Scan · " + name + " · " + components.SpecimenCode(s),
+		Description: "Specimen file for a " + name + " sighting: location, weather, taxonomy and observer credit.",
+		Page:        "scan",
+	}) {
+		@components.WeatherIcons()
+		<article class="section section--page dossier">
+			<nav class="crumbs mono" aria-label="Breadcrumb">
+				<a href="/">Scan deck</a>
+				<span aria-hidden="true">/</span>
+				<a href="/#specimens">Archive</a>
+				<span aria-hidden="true">/</span>
+				<span aria-current="page">{ components.SpecimenCode(s) }</span>
+			</nav>
+			<header class="dossier__head reveal">
+				<p class="eyebrow">
+					<span class="page-head__code">{ components.SpecimenCode(s) }</span>
+					if g := components.Group(s); g != "" {
+						{ g }
+					} else {
+						Specimen file
+					}
+				</p>
+				<h1 data-decode>{ name }</h1>
+				if s.Species.ScientificName != "" {
+					<p class="dossier__latin">{ s.Species.ScientificName }</p>
+				}
+				<p class="dossier__actions">
+					<a class="lab-button" href={ components.TrackerURL(name) }>Track this animal</a>
+					if s.ReferenceURL != "" {
+						<a class="lab-button lab-button--ghost" href={ templ.URL(s.ReferenceURL) } rel="noopener" target="_blank">Source record ↗</a>
+					}
+				</p>
+			</header>
+			<div class="dossier__grid">
+				<section class="dossier__visual panel reveal" aria-label="Photos">
+					if len(photos) == 0 {
+						<div class="dossier__photo dossier__photo--none">
+							<p class="specimen__no-image">No visual feed</p>
+						</div>
+					} else {
+						<figure class="dossier__photo">
+							<img src={ photos[0].URL } alt={ components.PhotoAlt(s, photos[0]) } decoding="async"/>
+							<span class="dossier__scanline" aria-hidden="true"></span>
+							<span class="dossier__reticle" aria-hidden="true"></span>
+							if photos[0].Creator != "" || photos[0].License != "" {
+								<figcaption class="mono">
+									if photos[0].Creator != "" {
+										Image · { photos[0].Creator }
+									}
+									if photos[0].License != "" {
+										<span class="dossier__licence">{ photos[0].License }</span>
+									}
+								</figcaption>
+							}
+						</figure>
+						if len(photos) > 1 {
+							<ul class="dossier__thumbs">
+								for _, m := range photos[1:min(len(photos), 7)] {
+									<li>
+										<a href={ templ.URL(m.URL) } rel="noopener" target="_blank">
+											<img src={ m.URL } alt={ components.PhotoAlt(s, m) } loading="lazy" decoding="async"/>
+										</a>
+									</li>
+								}
+							</ul>
+						}
+					}
+				</section>
+				<div class="dossier__side">
+					<section class="panel reveal" style="--reveal-delay: 100ms">
+						<p class="panel__title">Locator</p>
+						@components.Locator(s.Location.Coordinates)
+						<p class="dossier__coords mono">{ components.Coords(s.Location.Coordinates) }</p>
+						<p class="dossier__place">{ components.Place(s.Location) }</p>
+					</section>
+					<section class="panel reveal" style="--reveal-delay: 200ms">
+						<p class="panel__title">Conditions at sighting</p>
+						@components.Weather(s.Weather)
+					</section>
+				</div>
+				<section class="panel field-note field-note--big reveal">
+					<p class="field-note__label">Field note</p>
+					<p>{ components.FunFact(s.Species) }</p>
+				</section>
+				<section class="panel reveal">
+					<p class="panel__title">Readout</p>
+					<dl class="readout readout--full">
+						<div>
+							<dt>Logged</dt>
+							<dd class="mono">{ components.LoggedAt(s.HappenedAt) }</dd>
+						</div>
+						<div>
+							<dt>Count</dt>
+							<dd>
+								if s.IndividualCount != nil {
+									{ components.Individuals(*s.IndividualCount) }
+								} else {
+									Not counted
+								}
+							</dd>
+						</div>
+						<div>
+							<dt>Elevation</dt>
+							<dd class="mono">{ components.Metres(s.Location.ElevationInMetres) }</dd>
+						</div>
+						<div>
+							<dt>Accuracy</dt>
+							<dd class="mono">± { components.Metres(s.Location.CoordinateUncertaintyInMetres) }</dd>
+						</div>
+						<div>
+							<dt>Method</dt>
+							<dd>{ components.Basis(s.BasisOfRecord) }</dd>
+						</div>
+						<div>
+							<dt>GBIF key</dt>
+							<dd class="mono">{ s.GBIFKey }</dd>
+						</div>
+					</dl>
+				</section>
+				<section class="panel reveal" style="--reveal-delay: 100ms">
+					<p class="panel__title">Lineage</p>
+					<ol class="lineage">
+						for _, r := range components.Lineage(s.Species) {
+							<li>
+								<span class="lineage__level mono">{ r.Level }</span>
+								<span class="lineage__name">{ r.Name }</span>
+							</li>
+						}
+					</ol>
+				</section>
+				<section class="panel credit-panel reveal" style="--reveal-delay: 200ms">
+					<p class="panel__title">Observer credit</p>
+					<p class="credit-panel__name">
+						if s.RecordedBy != "" {
+							{ s.RecordedBy }
+						} else {
+							Unknown observer
+						}
+					</p>
+					<p class="mono credit__when">
+						<time datetime={ s.HappenedAt.UTC().Format("2006-01-02T15:04:05Z") }>{ components.LoggedAt(s.HappenedAt) }</time>
+					</p>
+					if s.Remarks != "" {
+						<blockquote class="credit-panel__remarks">{ s.Remarks }</blockquote>
+					}
+				</section>
+			</div>
+			if others := components.SameAnimal(s, all, 6); len(others) > 0 {
+				<section class="related reveal">
+					<h2 class="related__title">Other signals of this animal</h2>
+					<ul class="related__list">
+						for _, o := range others {
+							<li>
+								<a class="panel related__item" href={ components.SpecimenURL(o) }>
+									<span class="mono related__code">{ components.SpecimenCode(o) }</span>
+									<span class="related__place">{ components.Place(o.Location) }</span>
+									<span class="mono related__when">{ o.HappenedAt.Format("2 Jan 2006") }</span>
+								</a>
+							</li>
+						}
+					</ul>
+				</section>
+			}
+		</article>
+	}
+}

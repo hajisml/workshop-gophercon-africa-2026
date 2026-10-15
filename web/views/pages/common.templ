@@ -1,0 +1,18 @@
+package pages
+
+templ pageHead(code, eyebrow, title, lede string) {
+	<header class="page-head reveal">
+		<p class="eyebrow"><span class="page-head__code">{ code }</span>{ eyebrow }</p>
+		<h1 data-decode>{ title }</h1>
+		if lede != "" {
+			<p class="page-head__lede">{ lede }</p>
+		}
+	</header>
+}
+
+templ noSignals() {
+	<section class="empty panel">
+		<h1>No signals detected</h1>
+		<p>No sightings have been ingested yet.</p>
+	</section>
+}

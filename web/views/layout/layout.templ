@@ -3,6 +3,18 @@ package layout
 type BaseProps struct {
 	Title       string
 	Description string
+	Page        string
+}
+
+type navLink struct {
+	Page, Href, Label, Code string
+}
+
+var nav = []navLink{
+	{"scan", "/", "Scan deck", "01"},
+	{"tracker", "/tracker", "Tracker", "02"},
+	{"analysis", "/analysis", "Analysis lab", "03"},
+	{"observers", "/observers", "Observers", "04"},
 }
 
 templ Base(props BaseProps) {
@@ -18,6 +30,7 @@ templ Base(props BaseProps) {
 			if props.Description != "" {
 				<meta name="description" content={ props.Description }/>
 			}
+			<script>document.documentElement.classList.add('js')</script>
 			<link rel="preconnect" href="https://fonts.googleapis.com"/>
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap"/>
@@ -32,31 +45,51 @@ templ Base(props BaseProps) {
 			<link rel="stylesheet" href="/assets/css/threejs.css"/>
 			<link rel="stylesheet" href="/assets/css/filter.css"/>
 			<link rel="stylesheet" href="/assets/css/charts.css"/>
+			<link rel="stylesheet" href="/assets/css/weather.css"/>
 			<link rel="stylesheet" href="/assets/css/app.css"/>
+			<link rel="stylesheet" href="/assets/css/reveal.css"/>
+			<link rel="stylesheet" href="/assets/css/transitions.css"/>
+			<script src="/assets/js/reveal.js" defer></script>
+			<script src="/assets/js/lab.js" defer></script>
 		</head>
 		<body>
-			<a class="skip-link" href="#specimens">Skip to specimens</a>
+			<a class="skip-link" href="#content">Skip to content</a>
 			<header class="site-header">
-				<a class="brand" href="/">
+				<a class="brand logo" href="/">
 					<img src="/assets/images/logo.svg" alt="Terra Scan, home" width="40" height="40"/>
 					<span class="brand__name">Terra<span>Scan</span></span>
 					<span class="brand__sub">Field specimen atlas</span>
 				</a>
-				<nav class="site-nav" aria-label="Sections">
-					<a href="/#globe">Globe</a>
-					<a href="/#tracker">Tracker</a>
-					<a href="/#activity">Activity</a>
-					<a href="/#specimens">Specimens</a>
-					<a href="/#observers">Observers</a>
+				<nav class="site-nav" aria-label="Main">
+					for _, l := range nav {
+						<a
+							href={ templ.URL(l.Href) }
+							if l.Page == props.Page {
+								aria-current="page"
+							}
+						><span class="site-nav__code" aria-hidden="true">{ l.Code }</span>{ l.Label }</a>
+					}
 				</nav>
+				<p class="lab-clock mono" aria-hidden="true"><span class="lab-clock__dot"></span><span data-clock>UTC --:--:--</span></p>
 			</header>
-			<main>
+			<div class="status-strip" aria-hidden="true">
+				<div class="status-strip__track">
+					for range 2 {
+						<span>Biosphere uplink · online</span>
+						<span>GBIF archive · synced</span>
+						<span>Specimen index · nominal</span>
+						<span>Spectral scan · cycling</span>
+						<span>Observer network · listening</span>
+						<span>Hologram core · stable</span>
+					}
+				</div>
+			</div>
+			<main id="content">
 				{ children... }
 			</main>
 			<footer class="site-footer">
 				<p>Terra Scan · sighting data from <a href="https://www.gbif.org" rel="noopener">GBIF</a>, credited to each observer · photos © their creators</p>
 			</footer>
-			<script src="/assets/js/filter.js" defer></script>
 		</body>
 	</html>
 }

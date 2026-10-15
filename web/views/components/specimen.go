@@ -3,6 +3,7 @@ package components
 import (
 	"cmp"
 	"fmt"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -50,21 +51,105 @@ func FilterOptions(sightings []sighting.Sighting, n int, key func(sighting.Sight
 // FilterAttrs marks a list item with what the filter and the tracker read.
 func FilterAttrs(s sighting.Sighting) templ.Attributes {
 	return templ.Attributes{
-		"data-id":       s.ID.String(),
-		"data-animal":   Animal(s),
-		"data-group":    Group(s),
-		"data-country":  Country(s),
-		"data-place":    place(s.Location),
-		"data-observer": s.RecordedBy,
-		"data-time":     strconv.FormatInt(s.HappenedAt.Unix(), 10),
+		"data-id":      s.ID.String(),
+		"data-animal":  Animal(s),
+		"data-group":   Group(s),
+		"data-country": Country(s),
 		"data-search": strings.ToLower(strings.Join([]string{
 			Animal(s), s.Species.ScientificName, place(s.Location), s.RecordedBy,
 		}, " ")),
 	}
 }
 
-// SpecimenID is the card's element id, which the globe links to.
-func SpecimenID(s sighting.Sighting) string { return "s-" + s.ID.String() }
+// SpecimenURL is the address of the sighting's own page.
+func SpecimenURL(s sighting.Sighting) templ.SafeURL {
+	return templ.URL("/specimens/" + s.ID.String())
+}
+
+// TrackerURL opens the tracker locked on to the sighting's animal.
+func TrackerURL(animal string) templ.SafeURL {
+	return templ.URL("/tracker?animal=" + url.QueryEscape(animal))
+}
+
+// TrackPoint is what the tracker needs of one sighting.
+type TrackPoint struct {
+	ID       string  `json:"id"`
+	Animal   string  `json:"animal"`
+	Country  string  `json:"country"`
+	Place    string  `json:"place"`
+	Observer string  `json:"observer"`
+	Time     int64   `json:"time"`
+	Lat      float64 `json:"lat"`
+	Lng      float64 `json:"lng"`
+}
+
+// TrackPoints turns sightings into the tracker's data.
+func TrackPoints(sightings []sighting.Sighting) []TrackPoint {
+	points := make([]TrackPoint, len(sightings))
+	for i, s := range sightings {
+		points[i] = TrackPoint{
+			ID: s.ID.String(), Animal: Animal(s), Country: Country(s), Place: place(s.Location),
+			Observer: s.RecordedBy, Time: s.HappenedAt.Unix(), Lat: s.Location.Latitude, Lng: s.Location.Longitude,
+		}
+	}
+	return points
+}
+
+// Photos returns the sighting's still images.
+func Photos(s sighting.Sighting) []sighting.Media {
+	return slices.DeleteFunc(slices.Clone(s.Media), func(m sighting.Media) bool { return m.Type != "StillImage" || m.URL == "" })
+}
+
+// SameAnimal returns up to n other sightings of the same species, newest first.
+func SameAnimal(s sighting.Sighting, all []sighting.Sighting, n int) []sighting.Sighting {
+	others := slices.DeleteFunc(slices.Clone(all), func(o sighting.Sighting) bool {
+		return o.ID == s.ID || o.Species.ScientificName != s.Species.ScientificName
+	})
+	return Latest(others, n)
+}
+
+// Rank is one level of the taxonomy tree.
+type Rank struct{ Level, Name string }
+
+// Lineage lists the ranks GBIF supplied, kingdom first.
+func Lineage(sp species.Species) []Rank {
+	ranks := []Rank{
+		{"Kingdom", sp.Kingdom}, {"Phylum", sp.Phylum}, {"Class", sp.Class}, {"Order", sp.Order},
+		{"Family", sp.Family}, {"Genus", sp.Genus}, {"Species", cmp.Or(sp.CanonicalName, sp.Species)},
+	}
+	return slices.DeleteFunc(ranks, func(r Rank) bool { return r.Name == "" })
+}
+
+// Basis puts GBIF's basis of record into words.
+func Basis(b string) string {
+	return cmp.Or(strings.ToLower(strings.ReplaceAll(b, "_", " ")), "not recorded")
+}
+
+// Metres renders an optional measurement in metres.
+func Metres(v *float64) string {
+	if v == nil {
+		return "–"
+	}
+	return strconv.FormatFloat(*v, 'f', 0, 64) + " m"
+}
+
+// SpecimenCode is a short catalogue number from the GBIF key.
+func SpecimenCode(s sighting.Sighting) string { return specimenCode(s) }
+
+// Coords formats a position as degrees with hemispheres.
+func Coords(c sighting.Coordinates) string { return coords(c) }
+
+// LoggedAt is when it was seen, with the time only when GBIF recorded one.
+func LoggedAt(t time.Time) string { return loggedAt(t) }
+
+// Place joins whichever parts of the location GBIF supplied.
+func Place(l sighting.Location) string { return place(l) }
+
+// Individuals renders how many animals were seen.
+func Individuals(n int) string { return individuals(n) }
+
+// PhotoAlt describes a photo for screen readers.
+func PhotoAlt(s sighting.Sighting, m sighting.Media) string { return photoAlt(s, m) }
 
 // GlobePoints is each sighting as [lat, lng], in the order of the cards.
 func GlobePoints(sightings []sighting.Sighting) [][2]float64 {

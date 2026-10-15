@@ -1,0 +1,72 @@
+package pages
+
+import (
+	"workshop/internal/domain/sighting"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
+
+templ Observers(sightings []sighting.Sighting) {
+	{{ sum := sighting.Summarise(sightings) }}
+	{{ top := components.FilterOptions(sightings, 20, components.Observer) }}
+	@layout.Base(layout.BaseProps{
+		Title:       "Terra Scan · Observers",
+		Description: "Credits for the people in the field behind every wildlife sighting.",
+		Page:        "observers",
+	}) {
+		if len(sightings) == 0 {
+			@noSignals()
+		} else {
+			<section class="section section--page observers">
+				@pageHead("04", "Observer credits", "The field team", "Every record here exists because someone was out there to see it.")
+				<dl class="readings reveal">
+					<div class="panel reading">
+						<dt>Observers</dt>
+						<dd><span data-count>{ sum.Recorders }</span> <small>named in the field</small></dd>
+					</div>
+					<div class="panel reading">
+						<dt>Credited signals</dt>
+						<dd><span data-count>{ components.Credited(sightings) }</span> <small>{ components.Percent(components.Credited(sightings), sum.Sightings) } of the archive</small></dd>
+					</div>
+					if len(top) > 0 {
+						<div class="panel reading reading--wide">
+							<dt>Most active</dt>
+							<dd>{ top[0].Name } <small>{ top[0].Count } signals</small></dd>
+						</div>
+					}
+				</dl>
+				<div class="observers__grid">
+					<div class="panel reveal">
+						<p class="panel__title">Top observers</p>
+						<ol class="leaderboard">
+							for _, t := range top {
+								<li style={ components.BarStyle(t.Count, top[0].Count) }>
+									<span class="leaderboard__name">{ t.Name }</span>
+									<span class="leaderboard__count mono">{ t.Count } logged</span>
+								</li>
+							}
+						</ol>
+					</div>
+					<div class="panel reveal" style="--reveal-delay: 150ms">
+						<p class="panel__title">Latest transmissions</p>
+						<ol class="log">
+							for _, s := range components.Latest(sightings, 14) {
+								<li>
+									<a href={ components.SpecimenURL(s) }>{ components.Animal(s) }</a>
+									<span class="log__who">
+										if s.RecordedBy != "" {
+											{ s.RecordedBy }
+										} else {
+											Unknown observer
+										}
+									</span>
+									<time class="mono" datetime={ s.HappenedAt.UTC().Format("2006-01-02") }>{ s.HappenedAt.Format("2 Jan 2006") }</time>
+								</li>
+							}
+						</ol>
+					</div>
+				</div>
+			</section>
+		}
+	}
+}

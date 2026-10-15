@@ -1,0 +1,18 @@
+package components
+
+import "workshop/internal/domain/sighting"
+
+templ Locator(c sighting.Coordinates) {
+	{{ x, y := locate(c) }}
+	<svg class="locator" viewBox="0 0 360 180" role="img" aria-label={ "Position " + coords(c) }>
+		<rect class="locator__bg" x="0" y="0" width="360" height="180"></rect>
+		for _, g := range graticule() {
+			<line class="locator__grid" x1={ g[0] } y1={ g[1] } x2={ g[2] } y2={ g[3] }></line>
+		}
+		<line class="locator__equator" x1="0" y1="90" x2="360" y2="90"></line>
+		<line class="locator__cross" x1={ x } y1="0" x2={ x } y2="180"></line>
+		<line class="locator__cross" x1="0" y1={ y } x2="360" y2={ y }></line>
+		<circle class="locator__ring" cx={ x } cy={ y } r="9"></circle>
+		<circle class="locator__dot" cx={ x } cy={ y } r="3.5"></circle>
+	</svg>
+}

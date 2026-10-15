@@ -11,6 +11,18 @@ import templruntime "github.com/a-h/templ/runtime"
 type BaseProps struct {
 	Title       string
 	Description string
+	Page        string
+}
+
+type navLink struct {
+	Page, Href, Label, Code string
+}
+
+var nav = []navLink{
+	{"scan", "/", "Scan deck", "01"},
+	{"tracker", "/tracker", "Tracker", "02"},
+	{"analysis", "/analysis", "Analysis lab", "03"},
+	{"observers", "/observers", "Observers", "04"},
 }
 
 func Base(props BaseProps) templ.Component {
@@ -41,7 +53,7 @@ func Base(props BaseProps) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(props.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 17, Col: 23}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 29, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -59,7 +71,7 @@ func Base(props BaseProps) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.Description)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 19, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 31, Col: 56}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -70,7 +82,76 @@ func Base(props BaseProps) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap\"><script type=\"importmap\">\n\t\t\t\t{\n\t\t\t\t\t\"imports\": {\n\t\t\t\t\t\t\"three\": \"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js\",\n\t\t\t\t\t\t\"three/addons/\": \"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/\"\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t</script><link rel=\"stylesheet\" href=\"/assets/css/threejs.css\"><link rel=\"stylesheet\" href=\"/assets/css/filter.css\"><link rel=\"stylesheet\" href=\"/assets/css/charts.css\"><link rel=\"stylesheet\" href=\"/assets/css/app.css\"></head><body><a class=\"skip-link\" href=\"#specimens\">Skip to specimens</a><header class=\"site-header\"><a class=\"brand\" href=\"/\"><img src=\"/assets/images/logo.svg\" alt=\"Terra Scan, home\" width=\"40\" height=\"40\"> <span class=\"brand__name\">Terra<span>Scan</span></span> <span class=\"brand__sub\">Field specimen atlas</span></a><nav class=\"site-nav\" aria-label=\"Sections\"><a href=\"/#globe\">Globe</a> <a href=\"/#tracker\">Tracker</a> <a href=\"/#activity\">Activity</a> <a href=\"/#specimens\">Specimens</a> <a href=\"/#observers\">Observers</a></nav></header><main>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<script>document.documentElement.classList.add('js')</script><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap\"><script type=\"importmap\">\n\t\t\t\t{\n\t\t\t\t\t\"imports\": {\n\t\t\t\t\t\t\"three\": \"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js\",\n\t\t\t\t\t\t\"three/addons/\": \"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/\"\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t</script><link rel=\"stylesheet\" href=\"/assets/css/threejs.css\"><link rel=\"stylesheet\" href=\"/assets/css/filter.css\"><link rel=\"stylesheet\" href=\"/assets/css/charts.css\"><link rel=\"stylesheet\" href=\"/assets/css/weather.css\"><link rel=\"stylesheet\" href=\"/assets/css/app.css\"><link rel=\"stylesheet\" href=\"/assets/css/reveal.css\"><link rel=\"stylesheet\" href=\"/assets/css/transitions.css\"><script src=\"/assets/js/reveal.js\" defer></script><script src=\"/assets/js/lab.js\" defer></script></head><body><a class=\"skip-link\" href=\"#content\">Skip to content</a><header class=\"site-header\"><a class=\"brand logo\" href=\"/\"><img src=\"/assets/images/logo.svg\" alt=\"Terra Scan, home\" width=\"40\" height=\"40\"> <span class=\"brand__name\">Terra<span>Scan</span></span> <span class=\"brand__sub\">Field specimen atlas</span></a><nav class=\"site-nav\" aria-label=\"Main\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, l := range nav {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 templ.SafeURL
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(l.Href))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 66, Col: 31}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if l.Page == props.Page {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, " aria-current=\"page\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "><span class=\"site-nav__code\" aria-hidden=\"true\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var5 string
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(l.Code)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 70, Col: 63}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 string
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(l.Label)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/layout/layout.templ`, Line: 70, Col: 81}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</a>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</nav><p class=\"lab-clock mono\" aria-hidden=\"true\"><span class=\"lab-clock__dot\"></span><span data-clock>UTC --:--:--</span></p></header><div class=\"status-strip\" aria-hidden=\"true\"><div class=\"status-strip__track\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for range 2 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span>Biosphere uplink · online</span> <span>GBIF archive · synced</span> <span>Specimen index · nominal</span> <span>Spectral scan · cycling</span> <span>Observer network · listening</span> <span>Hologram core · stable</span>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div></div><main id=\"content\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -78,7 +159,7 @@ func Base(props BaseProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</main><footer class=\"site-footer\"><p>Terra Scan · sighting data from <a href=\"https://www.gbif.org\" rel=\"noopener\">GBIF</a>, credited to each observer · photos © their creators</p></footer><script src=\"/assets/js/filter.js\" defer></script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</main><footer class=\"site-footer\"><p>Terra Scan · sighting data from <a href=\"https://www.gbif.org\" rel=\"noopener\">GBIF</a>, credited to each observer · photos © their creators</p></footer></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

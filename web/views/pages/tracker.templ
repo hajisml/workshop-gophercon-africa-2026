@@ -1,0 +1,87 @@
+package pages
+
+import (
+	"workshop/internal/domain/sighting"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
+
+templ Tracker(sightings []sighting.Sighting, selected string) {
+	@layout.Base(layout.BaseProps{
+		Title:       "Terra Scan · Wildlife tracker",
+		Description: "Follow one animal through every sighting logged for it, oldest first.",
+		Page:        "tracker",
+	}) {
+		if len(sightings) == 0 {
+			@noSignals()
+		} else {
+			<section class="section section--page tracker">
+				@pageHead("02", "Wildlife tracker", "Target lock", "Choose an animal and replay every signal logged for it, oldest first. The trail joins sightings of the species, not one individual.")
+				@templ.JSONScript("tracker-data", components.TrackPoints(sightings))
+				<div class="tracker__grid">
+					<div class="globe globe--tracker panel reveal">
+						<span class="globe__corner globe__corner--tl" aria-hidden="true"></span>
+						<span class="globe__corner globe__corner--br" aria-hidden="true"></span>
+						<span class="globe__sweep" aria-hidden="true"></span>
+						@components.ThreeScene(components.ThreeSceneProps{
+							Scene: "tracker",
+							Label: "A globe tracing the tracked animal's sightings in date order. The current sighting is described beside it.",
+						})
+						<p class="globe__readout mono tracker__lock" aria-hidden="true"></p>
+						<p class="globe__hint">Drag to look around</p>
+					</div>
+					<div class="tracker__console panel reveal" style="--reveal-delay: 150ms" data-tracker>
+						<p class="panel__title">Target lock</p>
+						<label class="tracker__pick">
+							<span>Animal</span>
+							<select name="animal">
+								for _, t := range components.FilterOptions(sightings, 0, components.Animal) {
+									<option value={ t.Name } selected?={ t.Name == selected }>{ t.Name } · { t.Count }</option>
+								}
+							</select>
+						</label>
+						<div class="tracker__controls">
+							<button type="button" class="tracker__btn" data-action="prev" aria-label="Previous signal">◀</button>
+							<button type="button" class="tracker__btn tracker__btn--play" data-action="play" aria-pressed="false">Play trail</button>
+							<button type="button" class="tracker__btn" data-action="next" aria-label="Next signal">▶</button>
+						</div>
+						<label class="tracker__scrub">
+							<span class="visually-hidden">Signal</span>
+							<input type="range" name="step" min="0" max="0" value="0"/>
+						</label>
+						<div class="tracker__now" aria-live="polite">
+							<p class="tracker__step mono"></p>
+							<p class="tracker__when mono"></p>
+							<p class="tracker__where"></p>
+							<p class="tracker__who"></p>
+							<a class="tracker__open" href="/">Open specimen file →</a>
+						</div>
+						<dl class="tracker__stats">
+							<div>
+								<dt>Signals</dt>
+								<dd data-stat="signals">–</dd>
+							</div>
+							<div>
+								<dt>Regions</dt>
+								<dd data-stat="regions">–</dd>
+							</div>
+							<div>
+								<dt>First seen</dt>
+								<dd data-stat="first">–</dd>
+							</div>
+							<div>
+								<dt>Last seen</dt>
+								<dd data-stat="last">–</dd>
+							</div>
+							<div class="tracker__stats-wide">
+								<dt>Trail length</dt>
+								<dd data-stat="distance">–</dd>
+							</div>
+						</dl>
+					</div>
+				</div>
+				<script type="module" src="/assets/js/tracker.js"></script>
+			</section>
+		}
+	}
+}
