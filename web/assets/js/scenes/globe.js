@@ -4,83 +4,12 @@
 
 import { mount } from '/assets/js/threejs.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
-const R = 1.6;
+import { R, hologlobe, dotTexture } from '/assets/js/scenes/hologlobe.js';
 
 mount('globe', function ({ THREE, scene, camera, canvas, colour, still }) {
-	const primary = colour('--three-primary', '#3df5ff');
-	const accent = colour('--three-accent', '#ffb347');
-	const line = colour('--three-line', '#1b6f7a');
-	const core = colour('--three-core', '#06121c');
-
-	const toVec = function (lat, lng, r) {
-		const la = (lat * Math.PI) / 180;
-		const lo = (lng * Math.PI) / 180;
-		return new THREE.Vector3(r * Math.cos(la) * Math.sin(lo), r * Math.sin(la), r * Math.cos(la) * Math.cos(lo));
-	};
-
-	const globe = new THREE.Group();
+	const { group: globe, toVec, colours: palette } = hologlobe({ THREE, colour });
+	const { primary, accent, core } = palette;
 	scene.add(globe);
-
-	// The solid core hides the points on the far side.
-	globe.add(new THREE.Mesh(new THREE.SphereGeometry(R, 64, 48), new THREE.MeshBasicMaterial({ color: core })));
-
-	// A rim of light around the edge, brighter where the surface turns away.
-	globe.add(
-		new THREE.Mesh(
-			new THREE.SphereGeometry(R * 1.12, 64, 48),
-			new THREE.ShaderMaterial({
-				uniforms: { glow: { value: primary } },
-				vertexShader:
-					'varying vec3 vN; varying vec3 vV; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }',
-				fragmentShader:
-					'uniform vec3 glow; varying vec3 vN; varying vec3 vV; void main() { float f = pow(1.0 - abs(dot(vN, vV)), 3.0); gl_FragColor = vec4(glow, f * 0.55); }',
-				side: THREE.BackSide,
-				transparent: true,
-				blending: THREE.AdditiveBlending,
-				depthWrite: false,
-			}),
-		),
-	);
-
-	// Lines of latitude and longitude every 20°.
-	const grid = [];
-	for (let lat = -80; lat <= 80; lat += 20) {
-		for (let lng = -180; lng < 180; lng += 4) grid.push(toVec(lat, lng, R * 1.002), toVec(lat, lng + 4, R * 1.002));
-	}
-	for (let lng = -180; lng < 180; lng += 20) {
-		for (let lat = -88; lat < 88; lat += 4) grid.push(toVec(lat, lng, R * 1.002), toVec(lat + 4, lng, R * 1.002));
-	}
-	globe.add(
-		new THREE.LineSegments(
-			new THREE.BufferGeometry().setFromPoints(grid),
-			new THREE.LineBasicMaterial({ color: line, transparent: true, opacity: 0.45 }),
-		),
-	);
-
-	// Coastlines, if the outline data loads; the grid alone still reads as a globe.
-	Promise.all([
-		import('https://cdn.jsdelivr.net/npm/topojson-client@3/+esm'),
-		fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/land-110m.json').then((r) => r.json()),
-	])
-		.then(function ([topojson, world]) {
-			const mesh = topojson.mesh(world, world.objects.land);
-			const coast = [];
-			mesh.coordinates.forEach(function (ring) {
-				for (let i = 1; i < ring.length; i++) {
-					coast.push(toVec(ring[i - 1][1], ring[i - 1][0], R * 1.004), toVec(ring[i][1], ring[i][0], R * 1.004));
-				}
-			});
-			globe.add(
-				new THREE.LineSegments(
-					new THREE.BufferGeometry().setFromPoints(coast),
-					new THREE.LineBasicMaterial({ color: primary, transparent: true, opacity: 0.8 }),
-				),
-			);
-		})
-		.catch(function (err) {
-			console.warn('globe: coastlines not shown', err);
-		});
 
 	// One point of light per sighting.
 	const data = JSON.parse(document.getElementById('globe-points')?.textContent || '[]');
@@ -104,22 +33,12 @@ mount('globe', function ({ THREE, scene, camera, canvas, colour, still }) {
 		points.geometry.attributes.color.needsUpdate = true;
 	}
 
-	const dot = document.createElement('canvas');
-	dot.width = dot.height = 64;
-	const g = dot.getContext('2d');
-	const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-	grad.addColorStop(0, 'rgba(255,255,255,1)');
-	grad.addColorStop(0.25, 'rgba(255,255,255,0.85)');
-	grad.addColorStop(1, 'rgba(255,255,255,0)');
-	g.fillStyle = grad;
-	g.fillRect(0, 0, 64, 64);
-
 	const geometry = new THREE.BufferGeometry();
 	geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 	geometry.setAttribute('color', new THREE.BufferAttribute(colours, 3));
 	const material = new THREE.PointsMaterial({
 		size: 0.09,
-		map: new THREE.CanvasTexture(dot),
+		map: dotTexture(THREE),
 		vertexColors: true,
 		transparent: true,
 		blending: THREE.AdditiveBlending,

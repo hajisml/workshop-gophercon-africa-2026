@@ -35,6 +35,14 @@ background, glowing cyan lines, amber for highlights and field notes.
 - **Header**: sticky, translucent; logo (reticle around a globe, amber dot) + "TERRA SCAN" wordmark.
 - **Hero**: intro with four stat panels on the left, the 3D globe (three.js, `scenes/globe.js`) on
   the right. One glowing point per sighting; select one to scroll to its card. Filters dim points.
+- **Wildlife tracker** (`#tracker`): a second globe (`scenes/tracker.js`) beside a "Target
+  lock" console (`assets/js/tracker.js`). Pick an animal; its sightings are joined oldest-first by
+  an amber arcing trail that draws itself as you play or scrub. The console shows the current
+  signal (date, place, observer, link to its card) and stats: signals, regions, first/last seen,
+  distance between signals. Both globes share `scenes/hologlobe.js`.
+- **Activity dashboard** (`#activity`): signals-per-year line since 2010 with the busiest year and
+  last-12-months figures, and cyan bars for top animals, regions and classes (charts block).
+  Animal bars are buttons that lock the tracker on to that animal.
 - **Filter**: chips for class, animal and region, plus search (filter block).
 - **Specimen card**: 4:3 photo with scan lines and a hover sweep, catalogue tag, class badge;
   name, Latin name, taxonomy; a dashed readout (location, coords, count); an amber field note

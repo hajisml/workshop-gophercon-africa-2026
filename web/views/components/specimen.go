@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,13 +47,16 @@ func FilterOptions(sightings []sighting.Sighting, n int, key func(sighting.Sight
 	return sighting.Top(sighting.CountBy(sightings, key), n)
 }
 
-// FilterAttrs marks a list item with what the filter matches on.
+// FilterAttrs marks a list item with what the filter and the tracker read.
 func FilterAttrs(s sighting.Sighting) templ.Attributes {
 	return templ.Attributes{
-		"data-id":      s.ID.String(),
-		"data-animal":  Animal(s),
-		"data-group":   Group(s),
-		"data-country": Country(s),
+		"data-id":       s.ID.String(),
+		"data-animal":   Animal(s),
+		"data-group":    Group(s),
+		"data-country":  Country(s),
+		"data-place":    place(s.Location),
+		"data-observer": s.RecordedBy,
+		"data-time":     strconv.FormatInt(s.HappenedAt.Unix(), 10),
 		"data-search": strings.ToLower(strings.Join([]string{
 			Animal(s), s.Species.ScientificName, place(s.Location), s.RecordedBy,
 		}, " ")),
