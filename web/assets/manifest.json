@@ -1,0 +1,8 @@
+{
+	"name": "Terra Scan · Field specimen atlas",
+	"short_name": "Terra Scan",
+	"icons": [{ "src": "/assets/images/logo.svg", "sizes": "any", "type": "image/svg+xml" }],
+	"theme_color": "#050B14",
+	"background_color": "#050B14",
+	"display": "standalone"
+}

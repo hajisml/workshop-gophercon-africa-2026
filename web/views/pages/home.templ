@@ -8,20 +8,121 @@ import (
 
 templ Home(sightings []sighting.Sighting) {
 	@layout.Base(layout.BaseProps{
-		Title: "Sightings",
+		Title:       "Terra Scan · Field specimen atlas",
+		Description: "A holographic atlas of wildlife sightings from around the world, with field notes and observer credits.",
 	}) {
-		<h1>Sightings</h1>
 		if len(sightings) == 0 {
-			<p>No sightings have been ingested yet.</p>
+			<section class="empty panel">
+				<h1>No signals detected</h1>
+				<p>No sightings have been ingested yet.</p>
+			</section>
 		} else {
-			<p>Total: { len(sightings) }</p>
-			<ul class="sightings">
-				for _, s := range sightings {
-					<li>
-						@components.SightingCard(s)
-					</li>
-				}
-			</ul>
+			@hero(sightings, sighting.Summarise(sightings))
+			<section id="specimens" class="section">
+				<div class="section__head">
+					<p class="eyebrow">Module 02</p>
+					<h2>Specimen archive</h2>
+				</div>
+				@components.Filter(components.FilterProps{
+					Target: "specimen-list",
+					Search: true,
+					Groups: []components.FilterGroup{
+						{Key: "group", Label: "Class", Options: components.FilterOptions(sightings, 0, components.Group)},
+						{Key: "animal", Label: "Animal", Options: components.FilterOptions(sightings, 14, components.Animal)},
+						{Key: "country", Label: "Region", Options: components.FilterOptions(sightings, 12, components.Country)},
+					},
+				})
+				<ul id="specimen-list" class="specimens">
+					for _, s := range sightings {
+						<li { components.FilterAttrs(s)... }>
+							@components.SpecimenCard(s)
+						</li>
+					}
+				</ul>
+				<p class="no-match" hidden>No specimens match these filters.</p>
+			</section>
+			@observers(sightings)
 		}
 	}
+}
+
+templ hero(sightings []sighting.Sighting, sum sighting.Summary) {
+	<section id="globe" class="hero">
+		<div class="hero__intro">
+			<p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Live biosphere scan</p>
+			<h1>Every signal is an animal someone saw.</h1>
+			<p class="hero__lede">Spin the globe to scan the planet. Each point of light is a sighting; select one to pull up its specimen file, field note and the observer who logged it.</p>
+			<dl class="stats">
+				<div class="panel stat">
+					<dt>Signals</dt>
+					<dd>{ sum.Sightings }</dd>
+				</div>
+				<div class="panel stat">
+					<dt>Species</dt>
+					<dd>{ sum.Species }</dd>
+				</div>
+				<div class="panel stat">
+					<dt>Regions</dt>
+					<dd>{ sum.Countries }</dd>
+				</div>
+				<div class="panel stat">
+					<dt>Observers</dt>
+					<dd>{ sum.Recorders }</dd>
+				</div>
+			</dl>
+			<p class="hero__range mono">Archive span { sum.Earliest.Format("2006") } → { sum.Latest.Format("2006") }</p>
+		</div>
+		<div class="globe panel">
+			<span class="globe__corner globe__corner--tl" aria-hidden="true"></span>
+			<span class="globe__corner globe__corner--br" aria-hidden="true"></span>
+			@templ.JSONScript("globe-points", components.GlobePoints(sightings))
+			@components.ThreeScene(components.ThreeSceneProps{
+				Scene: "globe",
+				Label: "A rotating globe with a glowing point for each sighting. The same sightings are listed below.",
+			})
+			<p class="globe__readout mono" aria-live="polite"></p>
+			<p class="globe__hint">Drag to rotate · select a signal</p>
+		</div>
+	</section>
+}
+
+templ observers(sightings []sighting.Sighting) {
+	<section id="observers" class="section observers">
+		<div class="section__head">
+			<p class="eyebrow">Module 03</p>
+			<h2>Observer credits</h2>
+			<p class="section__lede">The people in the field behind every record.</p>
+		</div>
+		<div class="observers__grid">
+			<div class="panel">
+				<p class="panel__title">Top observers</p>
+				<ol class="leaderboard">
+					for _, t := range components.FilterOptions(sightings, 10, components.Observer) {
+						<li>
+							<span class="leaderboard__name">{ t.Name }</span>
+							<span class="leaderboard__count mono">{ t.Count } logged</span>
+						</li>
+					}
+				</ol>
+			</div>
+			<div class="panel">
+				<p class="panel__title">Latest transmissions</p>
+				<ol class="log">
+					for _, s := range components.Latest(sightings, 8) {
+						<li>
+							<a href={ templ.URL("#" + components.SpecimenID(s)) }>{ components.Animal(s) }</a>
+							<span class="log__who">
+								if s.RecordedBy != "" {
+									{ s.RecordedBy }
+								} else {
+									Unknown observer
+								}
+							</span>
+							<time class="mono" datetime={ s.HappenedAt.UTC().Format("2006-01-02") }>{ s.HappenedAt.Format("2 Jan 2006") }</time>
+						</li>
+					}
+				</ol>
+			</div>
+		</div>
+	</section>
 }

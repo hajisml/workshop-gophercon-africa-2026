@@ -1,7 +1,8 @@
 package layout
 
 type BaseProps struct {
-	Title string
+	Title       string
+	Description string
 }
 
 templ Base(props BaseProps) {
@@ -10,14 +11,49 @@ templ Base(props BaseProps) {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<link rel="icon" href="/assets/images/logo.svg" type="image/svg+xml"/>
+			<link rel="manifest" href="/assets/manifest.json"/>
+			<meta name="theme-color" content="#050B14"/>
 			<title>{ props.Title }</title>
+			if props.Description != "" {
+				<meta name="description" content={ props.Description }/>
+			}
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap"/>
+			<script type="importmap">
+				{
+					"imports": {
+						"three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+						"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+					}
+				}
+			</script>
+			<link rel="stylesheet" href="/assets/css/threejs.css"/>
+			<link rel="stylesheet" href="/assets/css/filter.css"/>
 			<link rel="stylesheet" href="/assets/css/app.css"/>
 		</head>
 		<body>
-			<main class="container">
+			<a class="skip-link" href="#specimens">Skip to specimens</a>
+			<header class="site-header">
+				<a class="brand" href="/">
+					<img src="/assets/images/logo.svg" alt="Terra Scan, home" width="40" height="40"/>
+					<span class="brand__name">Terra<span>Scan</span></span>
+					<span class="brand__sub">Field specimen atlas</span>
+				</a>
+				<nav class="site-nav" aria-label="Sections">
+					<a href="/#globe">Globe</a>
+					<a href="/#specimens">Specimens</a>
+					<a href="/#observers">Observers</a>
+				</nav>
+			</header>
+			<main>
 				{ children... }
 			</main>
-			<script src="/assets/js/app.js"></script>
+			<footer class="site-footer">
+				<p>Terra Scan · sighting data from <a href="https://www.gbif.org" rel="noopener">GBIF</a>, credited to each observer · photos © their creators</p>
+			</footer>
+			<script src="/assets/js/filter.js" defer></script>
 		</body>
 	</html>
 }
